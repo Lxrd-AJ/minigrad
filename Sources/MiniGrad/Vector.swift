@@ -14,7 +14,7 @@ extension Vector: AdditiveArithmetic {
         // to reduce code duplication
         guard left != .zero else { return right }
         guard right != .zero else { return left }
-        assert(left.data.count == right.data.count, "Both vectors must be the same length")
+        precondition(left.data.count == right.data.count, "Both vectors must be the same length")
         let summed = zip(left.data, right.data).map({ $0 + $1 })
 
         return Vector(data: summed)
@@ -23,8 +23,46 @@ extension Vector: AdditiveArithmetic {
     static func - (left: Vector, right: Vector) -> Vector {
         guard left != .zero else { return right }
         guard right != .zero else { return left }
-        assert(left.data.count == right.data.count, "Both vectors must be the same length")
+        precondition(left.data.count == right.data.count, "Both vectors must be the same length")
         let difference = zip(left.data, right.data).map({ $0 - $1 })
         return Vector(data: difference)
+    }
+
+    /// Vector + Scalar addition
+    static func + (left: Vector, right: Element) -> Vector {
+        return addition(scalar: right, vector: left)
+    }
+    
+    static func + (left: Element, right: Vector) -> Vector {
+        return addition(scalar: left, vector: right)
+    }
+    
+    private static func addition(scalar: Element, vector: Vector) -> Vector {
+        guard vector != .zero else { return Vector(data: [scalar]) }
+        let added = vector.data.map({ $0 + scalar })
+        return Vector(data: added)
+    }
+}
+
+// Example showing specific
+// Can use `Accelerate` for optimisations on specific types
+//extension Vector<Int> {
+//    func sdd() {
+//        let x = self.data
+//    }
+//}
+
+extension Vector {
+    /// Vector scalar multiplication
+    static func * (left: Vector, right: Element) -> Vector {
+        return multiplication(scalar: right, vector: left)
+    }
+    
+    static func * (left: Element, right: Vector) -> Vector {
+        return multiplication(scalar: left, vector: right)
+    }
+    
+    private static func multiplication(scalar: Element, vector: Vector) -> Vector {
+        return Vector(data: vector.data.map({ $0 * scalar }))
     }
 }

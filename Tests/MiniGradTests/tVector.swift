@@ -32,6 +32,32 @@ final class tVector: XCTestCase {
         let similarZero = Vector(data: Array(repeating: 0, count: v1.data.count))
         XCTAssertEqual(v1 - v1, similarZero)
     }
+
+    func testVectorScalarAddition() throws {
+        let entries = randomArray(size: 10)
+        let v1 = Vector(data: entries)
+        let scalar = Int.random(in: -100...100)
+        let expected = Vector(data: entries.map({ $0 + scalar }))
+
+        XCTAssertEqual(v1 + scalar, expected)
+        
+        // Commutative test
+        XCTAssertEqual(scalar + v1, expected)
+    }
+    
+    func testCommutativeVectorScalarMultiplication() throws {
+        let entries = randomFloatArray(size: 20)
+        let v1 = Vector(data: entries)
+        let scalar = Float.random(in: -100...100.0)
+        let expected = entries.map({ $0 * scalar })
+        
+        XCTAssertEqual((v1 * scalar).data, expected)
+        XCTAssertEqual((scalar * v1).data, expected)
+    }
+    
+    func testAssociativityScalarMultiplication() throws {
+        XCTFail("TODO:")
+    }
 }
 
 
@@ -39,4 +65,10 @@ func randomArray(size: Int) -> [Int] {
     let upperBound = Int.max / 2
     let lowerBound = Int.min / 2
     return (0...size).map({ _ in Int.random(in: lowerBound..<upperBound)})
+}
+
+func randomFloatArray(size: Int) -> [Float] {
+    let upperBound = Float.greatestFiniteMagnitude / 2
+    let lowerBound = -upperBound
+    return (0...size).map({ _ in Float.random(in: lowerBound..<upperBound) })
 }
