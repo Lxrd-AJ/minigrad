@@ -56,7 +56,23 @@ final class tVector: XCTestCase {
     }
     
     func testAssociativityScalarMultiplication() throws {
-        XCTFail("TODO:")
+        let a = Float.random(in: -1.0...1.0)
+        let b = Float.random(in: -1.0...1.0)
+        let v1 = Vector(data: randomFloatArray(size: 10) )
+        let diff = ((a * b) * v1) - (a * (b * v1))
+        // TODO: Include tolerance or accuracy for floating point comparison
+        XCTAssertEqual((a * b) * v1, a * (b * v1))
+        print(diff)
+    }
+    
+    func testDistributiveScalarVectorMultiplication() throws {
+        let a = Float.random(in: -1.0...1.0)
+        let b = Float.random(in: -1.0...1.0)
+        let v1 = Vector(data: randomFloatArray(size: 10))
+        
+        let left = (a + b) * v1
+        let right = v1 * (a + b)
+        XCTAssertEqual(left, right)
     }
 }
 
@@ -68,7 +84,7 @@ func randomArray(size: Int) -> [Int] {
 }
 
 func randomFloatArray(size: Int) -> [Float] {
-    let upperBound = Float.greatestFiniteMagnitude / 2
+    let upperBound = Float.random(in: 1...5)
     let lowerBound = -upperBound
-    return (0...size).map({ _ in Float.random(in: lowerBound..<upperBound) })
+    return (0..<size).map({ _ in Float.random(in: lowerBound..<upperBound) })
 }

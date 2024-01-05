@@ -53,7 +53,7 @@ extension Vector: AdditiveArithmetic {
 //}
 
 extension Vector {
-    /// Vector scalar multiplication
+    /// Vector-scalar multiplication
     static func * (left: Vector, right: Element) -> Vector {
         return multiplication(scalar: right, vector: left)
     }
