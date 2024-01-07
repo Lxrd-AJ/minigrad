@@ -1,8 +1,22 @@
+infix operator .*
+
+enum VectorShape {
+    case row
+    case column
+}
+
 struct Vector<Element: Numeric> {
     let data: [Element]
+    private var shape: VectorShape
 
-    init(data: [Element]) {
+    init(data: [Element], shape: VectorShape = .column) {
         self.data = data
+        self.shape = shape
+    }
+    
+    func transpose() -> Vector {
+        let newShape: VectorShape = (self.shape == .column) ? .row : .column
+        return Vector(data: self.data, shape: newShape)
     }
 }
 
@@ -64,5 +78,21 @@ extension Vector {
     
     private static func multiplication(scalar: Element, vector: Vector) -> Vector {
         return Vector(data: vector.data.map({ $0 * scalar }))
+    }
+    
+    // MARK: - Vector dot product
+    static func .* (left: Vector, right: Vector) -> Vector {
+        precondition(left.data.count == right.data.count, "Vectors must be the same length for element-wise product")
+        let product = zip(left.data, right.data).map({ $0 * $1 })
+        return Vector(data: product)
+    }
+    
+    /// NB: This vector product is not accurate, or rather is accurate probably up to 0.001 
+    func dot(_ other: Vector) -> Element {
+        precondition(self.shape != other.shape, "Vector shapes must not be the same")
+        precondition(self.shape == .row, "Outer product not supported. `x` must be a row vector in `x.dot(y)`")
+        
+        let elementWiseProduct = self .* other
+        return elementWiseProduct.data.reduce(0, +)
     }
 }

@@ -59,10 +59,8 @@ final class tVector: XCTestCase {
         let a = Float.random(in: -1.0...1.0)
         let b = Float.random(in: -1.0...1.0)
         let v1 = Vector(data: randomFloatArray(size: 10) )
-        let diff = ((a * b) * v1) - (a * (b * v1))
-        // TODO: Include tolerance or accuracy for floating point comparison
-        XCTAssertEqual((a * b) * v1, a * (b * v1))
-        print(diff)
+        
+        verifyEqual((a * b) * v1, a * (b * v1))
     }
     
     func testDistributiveScalarVectorMultiplication() throws {
@@ -74,12 +72,72 @@ final class tVector: XCTestCase {
         let right = v1 * (a + b)
         XCTAssertEqual(left, right)
     }
+    
+    func testElementWiseVectorProduct() throws {
+        let d1 = randomArray(size: 10, max: 100)
+        let d2 = randomArray(size: 10, max: 200)
+        let expected = zip(d1, d2).map({ $0 * $1 })
+        
+        let v1 = Vector(data: d1)
+        let v2 = Vector(data: d2)
+        XCTAssertEqual((v1 .* v2).data, expected)
+    }
+    
+    // MARK: - Inner Product or Dot Product
+    func testDotProduct() throws {
+        let v1 = Vector(data: [-1, 2, 2], shape: .column)
+        let v2 = Vector(data: [1, 0, -3], shape: .column)
+        
+        let dotProduct = v1.transpose().dot(v2)
+        XCTAssertEqual(dotProduct, -7)
+    }
+    
+    /// For commutativity $a^T \times b = b^T \times a$
+    func testDotProductCommutativity() throws {
+        let v1 = Vector(data: randomArray(size: 10, max: 10), shape: .column)
+        let v2 = Vector(data: randomArray(size: 10, max: 10), shape: .column)
+        
+        XCTAssertEqual(
+            v1.transpose().dot(v2),
+            v2.transpose().dot(v1),
+            "Vector dot product is commutative"
+        )
+    }
+    
+    /// For scalar associativity
+    /// $(c a)^T b = c(a^T b) = ca^Tb$
+    func testAssociativityWithScalarMultiplication() throws {
+        let v1 = Vector(data: randomFloatArray(size: 10), shape: .column)
+        let v2 = Vector(data: randomFloatArray(size: 10), shape: .column)
+        let scalar = Float.random(in: -100...100)
+        
+        XCTAssertEqual(
+            (scalar * v1).transpose().dot(v2),
+            scalar * (v1.transpose().dot(v2)),
+            accuracy: 1e-3, // Use a low accuracy for now
+            "Associativity with scalar dot product not matched"
+        )
+    }
+    
+    /// For distributivity with vector addition
+    /// $ (a + b)^T c = (a^Tc + b^Tc)$
+    func testDistributivityWithVectorAddition() throws {
+        let v1 = Vector(data: randomFloatArray(size: 10), shape: .column)
+        let v2 = Vector(data: randomFloatArray(size: 10), shape: .column)
+        let scalar = Float.random(in: -100...100)
+        
+        verifyEqual(
+            (v1 + v2).transpose() * scalar,
+            (v1.transpose() * scalar) + (v2.transpose() * scalar),
+            tolerance: 1e-3, // Use a low accuracy for now
+            "Distributivity with vector addition"
+        )
+    }
 }
 
 
-func randomArray(size: Int) -> [Int] {
-    let upperBound = Int.max / 2
-    let lowerBound = Int.min / 2
+func randomArray(size: Int, max: Int = Int.max / 2) -> [Int] {
+    let (upperBound, lowerBound) = (max, max/2)
     return (0...size).map({ _ in Int.random(in: lowerBound..<upperBound)})
 }
 
