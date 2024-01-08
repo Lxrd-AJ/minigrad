@@ -58,14 +58,6 @@ extension Vector: AdditiveArithmetic {
     }
 }
 
-// Example showing specific
-// Can use `Accelerate` for optimisations on specific types
-//extension Vector<Int> {
-//    func sdd() {
-//        let x = self.data
-//    }
-//}
-
 extension Vector {
     /// Vector-scalar multiplication
     static func * (left: Vector, right: Element) -> Vector {
@@ -94,5 +86,18 @@ extension Vector {
         
         let elementWiseProduct = self .* other
         return elementWiseProduct.data.reduce(0, +)
+    }
+}
+
+extension Vector<Float> {
+    /// When `Element` is a `Float` and the `Accelerate` library is available.
+    /// An optimised version of a single precision vector dot product is computed using `BLAS`
+    func dot(_ other: Vector<Float>) -> Float {
+        #if canImport(Accelerate)
+        return blas_vectorDotProduct(left: self, right: other)
+        #else
+        return self.dot(other)
+        #endif
+        
     }
 }

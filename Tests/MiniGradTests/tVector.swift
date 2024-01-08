@@ -114,7 +114,7 @@ final class tVector: XCTestCase {
         XCTAssertEqual(
             (scalar * v1).transpose().dot(v2),
             scalar * (v1.transpose().dot(v2)),
-            accuracy: 1e-3, // Use a low accuracy for now
+            accuracy: 1e-5, // Expected BLAS accuracy 
             "Associativity with scalar dot product not matched"
         )
     }
