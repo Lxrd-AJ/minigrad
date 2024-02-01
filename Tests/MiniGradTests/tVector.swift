@@ -133,8 +133,12 @@ final class tVector: XCTestCase {
             "Distributivity with vector addition"
         )
     }
+    
+    func testMatrix() throws {
+        let m = Matrix<Float>.zeros(nrows: 10, ncols: 20)
+        print(m)
+    }
 }
-
 
 func randomArray(size: Int, max: Int = Int.max / 2) -> [Int] {
     let (upperBound, lowerBound) = (max, max/2)
