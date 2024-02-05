@@ -5,8 +5,8 @@ enum VectorShape {
     case column
 }
 
-struct Vector<Element: Numeric> {
-    let data: [Element]
+public struct Vector<Element: Numeric> {
+    internal var data: [Element]
     private var shape: VectorShape
 
     init(data: [Element], shape: VectorShape = .column) {
@@ -20,11 +20,22 @@ struct Vector<Element: Numeric> {
     }
 }
 
-extension Vector: AdditiveArithmetic {
-    static var zero: Vector<Element> { return Vector(data: [0]) }
+public extension Vector {
+    subscript(index: Int) -> Element {
+        get {
+            return self.data[index]
+        }
+        set {
+            self.data[index] = newValue
+        }
+    }
+}
 
-    static func + (left: Vector, right: Vector) -> Vector {
-        // TODO: Use Macros, https://docs.swift.org/swift-book/documentation/the-swift-programming-language/macros/ 
+extension Vector: AdditiveArithmetic {
+    public static var zero: Vector<Element> { return Vector(data: [0]) }
+
+    public static func + (left: Vector, right: Vector) -> Vector {
+        // TODO: Use Macros, https://docs.swift.org/swift-book/documentation/the-swift-programming-language/macros/
         // to reduce code duplication
         guard left != .zero else { return right }
         guard right != .zero else { return left }
@@ -34,7 +45,7 @@ extension Vector: AdditiveArithmetic {
         return Vector(data: summed)
     }
 
-    static func - (left: Vector, right: Vector) -> Vector {
+    public static func - (left: Vector, right: Vector) -> Vector {
         guard left != .zero else { return right }
         guard right != .zero else { return left }
         precondition(left.data.count == right.data.count, "Both vectors must be the same length")

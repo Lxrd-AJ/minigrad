@@ -20,5 +20,13 @@ extension XCTestCase {
             XCTAssertEqual(item.0, item.1, accuracy: tolerance, message)
         }
     }
+    
+    func verifyNotEqual(_ left: Vector<Float>, _ right: Vector<Float>, tolerance: Float = Float.ulpOfOne, _ message: String = "") {
+        XCTAssertEqual(left.data.count, right.data.count)
+        let items = zip(left.data, right.data)
+        for item in items {
+            XCTAssertNotEqual(item.0, item.1, accuracy: tolerance, message)
+        }
+    }
 }
 
