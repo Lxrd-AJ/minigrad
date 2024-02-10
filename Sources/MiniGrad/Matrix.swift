@@ -20,6 +20,10 @@ public struct Matrix<Element: Numeric> {
     /// The number of columns in the matrix
     public let ncols: Int
     
+    public var shape: (nrows: Int, ncols: Int) {
+        return (nrows, ncols)
+    }
+    
     /// The minimum dimension defined as `min(nrows, ncols)` for use with BLAS  & LAPACK Interop
     var minDimension: Int {
         return min(nrows, ncols)

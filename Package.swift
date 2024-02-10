@@ -27,6 +27,10 @@ let package = Package(
         ),
         .testTarget(
             name: "MiniGradTests",
-            dependencies: ["MiniGrad"]),
+            dependencies: ["MiniGrad"],
+            resources: [
+                .copy("Resources/veles.jpeg")
+            ]
+        ),
     ]
 )

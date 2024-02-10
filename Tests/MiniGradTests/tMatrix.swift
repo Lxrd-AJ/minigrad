@@ -50,4 +50,52 @@ final class tMatrix: XCTestCase {
         
         print(m)
     }
+    
+    func testMatrix32BitsFromCGImage() throws {
+        let image = self.loadImage(named: "veles", ext: "jpeg")
+        let imageMatrix = Matrix<Float>.from32Bits(cgImage: image)
+        XCTAssertNotNil(imageMatrix)
+        
+        print(imageMatrix![10, 2...20])
+        
+        let returnedImage = imageMatrix!.toCGImage32Bits()!
+        self.add(returnedImage, title: "recon_32bits_veles")
+    }
+    
+    func testMatrixFromCGImageDirectly() throws {
+        let image = self.loadImage(named: "veles", ext: "jpeg")
+        print(image)
+        
+        let imageMatrix = Matrix<UInt8>.from(cgImage: image)!
+//        let imageMatrix = Matrix<UInt8>.diagonal(elements: [UInt8](repeating: 255, count: 1000))
+        
+        let returnedImage = imageMatrix.toCGImage()!
+       
+        self.add(returnedImage, title: "recon_veles")
+    }
+    
+    private func loadImage(named: String, ext: String? = nil) -> CGImage {
+        guard let imgURL = Bundle.module.url(forResource: named, withExtension: ext) else {
+            fatalError("could not find image url")
+        }
+        guard let imageData = try? Data(contentsOf: imgURL) else {
+            print("Could not convert URL to data")
+            fatalError()
+        }
+        
+        #if canImport(AppKit)
+        let pImage = NSImage(data: imageData)!
+        return pImage.cgImage(forProposedRect: nil, context: nil, hints: nil)!
+        #else
+        let pImage = UIImage(data: imageData)!
+        return pImage.cgImage!
+        #endif
+    }
+    
+    private func add(_ image: CGImage, title: String? = nil, lifetime: XCTAttachment.Lifetime = .deleteOnSuccess) {
+        let attachment = XCTAttachment(image: NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height)))
+        attachment.lifetime = lifetime
+        attachment.name = title
+        self.add(attachment)
+    }
 }
