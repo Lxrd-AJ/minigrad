@@ -8,7 +8,7 @@ import XCTest
 //@testable import MiniGrad
 import MiniGrad
 
-final class tMatrix: XCTestCase {
+final class tMatrix: TestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -70,32 +70,7 @@ final class tMatrix: XCTestCase {
 //        let imageMatrix = Matrix<UInt8>.diagonal(elements: [UInt8](repeating: 255, count: 1000))
         
         let returnedImage = imageMatrix.toCGImage()!
-       
-        self.add(returnedImage, title: "recon_veles")
-    }
-    
-    private func loadImage(named: String, ext: String? = nil) -> CGImage {
-        guard let imgURL = Bundle.module.url(forResource: named, withExtension: ext) else {
-            fatalError("could not find image url")
-        }
-        guard let imageData = try? Data(contentsOf: imgURL) else {
-            print("Could not convert URL to data")
-            fatalError()
-        }
         
-        #if canImport(AppKit)
-        let pImage = NSImage(data: imageData)!
-        return pImage.cgImage(forProposedRect: nil, context: nil, hints: nil)!
-        #else
-        let pImage = UIImage(data: imageData)!
-        return pImage.cgImage!
-        #endif
-    }
-    
-    private func add(_ image: CGImage, title: String? = nil, lifetime: XCTAttachment.Lifetime = .deleteOnSuccess) {
-        let attachment = XCTAttachment(image: NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height)))
-        attachment.lifetime = lifetime
-        attachment.name = title
-        self.add(attachment)
+        self.add(returnedImage, title: "recon_veles")
     }
 }
