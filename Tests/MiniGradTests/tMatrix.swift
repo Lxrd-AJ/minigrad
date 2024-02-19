@@ -49,6 +49,12 @@ final class tMatrix: TestCase {
         XCTAssertNotEqual(v1, v2)
         
         print(m)
+        print(m.shape)
+        
+        let v3 = m[1, ...]
+        print(v3)
+        print(v3.length)
+        XCTAssertNotEqual(v3[1], 0)
     }
     
     func testMatrix32BitsFromCGImage() throws {

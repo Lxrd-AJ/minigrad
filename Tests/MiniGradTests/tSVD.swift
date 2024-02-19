@@ -9,6 +9,7 @@
 import XCTest
 import MiniGrad
 
+@available(macOS 13.3, *)
 final class tSVD: TestCase {
 
     func testSVDOnAnImage() throws {
@@ -17,8 +18,9 @@ final class tSVD: TestCase {
         
         let svd = image2D.svd()
         
-        print(svd.U.shape)
-        print(svd.Sigma.shape)
+        print("A: \(image2D.shape)")
+        print("U: \(svd.U.shape)")
+        print("S: \(svd.Sigma.shape)")
         print(svd.Vt.shape)
         
         let reconImage2D = image2D.toCGImage()!

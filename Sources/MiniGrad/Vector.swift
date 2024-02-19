@@ -8,6 +8,10 @@ enum VectorShape {
 public struct Vector<Element: Numeric> {
     internal var data: [Element]
     private var shape: VectorShape
+    
+    public var length: Int {
+        return data.count
+    }
 
     init(data: [Element], shape: VectorShape = .column) {
         self.data = data
@@ -100,15 +104,13 @@ extension Vector {
     }
 }
 
+#if canImport(Accelerate) && ACCELERATE_NEW_LAPACK
 extension Vector<Float> {
     /// When `Element` is a `Float` and the `Accelerate` library is available.
     /// An optimised version of a single precision vector dot product is computed using `BLAS`
+    @available(macOS 13.3, *)
     func dot(_ other: Vector<Float>) -> Float {
-        #if canImport(Accelerate)
         return blas_vectorDotProduct(left: self, right: other)
-        #else
-        return self.dot(other)
-        #endif
-        
     }
 }
+#endif

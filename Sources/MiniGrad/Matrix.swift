@@ -99,6 +99,15 @@ public extension Matrix {
         let copyOfData: [Element] = Array(data)
         return Vector(data: copyOfData, shape: .row)
     }
+    
+    subscript(row: Int, column: UnboundedRange) -> Vector<Element> {
+        assert((row >= 0 && row < nrows), "Index out of range")
+        let stride = row * self.ncols
+        let data = self.dataRef.data[(stride) ... (stride + self.ncols - 1)]
+        // Copy of the data for now
+        let copyOfData: [Element] = Array(data)
+        return Vector(data: copyOfData, shape: .row)
+    }
 }
 
 extension Matrix: CustomStringConvertible {
