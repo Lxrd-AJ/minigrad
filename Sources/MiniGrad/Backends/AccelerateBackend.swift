@@ -15,6 +15,9 @@ func blas_vectorDotProduct(left: Vector<Float>, right: Vector<Float>) -> Float {
     return cblas_sdot(Int32(left.data.count), left.data, 1, right.data, 1 )
 }
 
+/// Computes the singular value decomposition of a float matrix `A` represented by `data`
+/// The references to the `u` $U$, `sigma` ($_sigma_$) matrices are populated on exit
+/// and the number of singular values found returned.
 @available(macOS 13.3, *)
 func lapack_svd(
     u: UnsafePointer<Matrix<Float>>,
@@ -30,9 +33,13 @@ func lapack_svd(
     // the range is either `A` or `I`.
     var vl = Float(), vu = Float()
     
-    var numRows = __LAPACK_int(numRows)
-    var numCols = __LAPACK_int(numCols)
+    var M = __LAPACK_int(numRows)
+    var N = __LAPACK_int(numCols)
     var lda = __LAPACK_int(numRows) // The leading dimension of the array A.  LDA >= max(1,numRows)
+    // The leading dimension of the array U for left singular vectors
+    // LDU >= numRows
+    var ldu = __LAPACK_int(numRows)
+    var ldvt = __LAPACK_int(numCols)
     // The `IL` and `IU` parameters specify the first and last indices
     // of the singular values that `sgesvdx_` computes.
     // As this method computes all singlular values with `RANGE='A'`, then these values are ignored.
@@ -59,7 +66,9 @@ func lapack_svd(
     //    only calculates the optimal size of the WORK array, returns
     //    this value as the first entry of the WORK array, and no error
     //    message related to LWORK is issued by XERBLA.
-    let LWORK = __LAPACK_int(-1)
+    var LWORK_QUERY = __LAPACK_int(-1)
+    // The size of the required workspace would be written to `workspaceDimension` because `LWORK = -1`
+    var workspaceDimension = Float()
     // Create a copy of the `A` matrix, per the documentation, `sgesvdx` destroys the contents of the
     // `A` matrix on exit.
     let aCopy = UnsafeMutableBufferPointer<Float>.allocate(capacity: data.count)
@@ -67,9 +76,41 @@ func lapack_svd(
     defer {
         aCopy.deallocate()
     }
+    // Create `iwork`, kind of like a page in a notebook for LAPACK to perform its calculations
+    let iwork = UnsafeMutablePointer<__LAPACK_int>.allocate(capacity: 12 * min(numRows, numCols))
+    defer {
+        iwork.deallocate()
+    }
+    // if `info` is
+    // * `0`: Then the program completed successfully
+    // * `<0`: Then `info` = -i, the i-th argument had an illegal value
+    // * `>0`: Then the ith eigenvector failed to converge
+    var info = __LAPACK_int(0)
+    
     // Compute the dimension of the workspace needed for LAPACK
-//    sgesvdx_(&JOBU, &JOBVT, &RANGE, &numRows, &numCols, aCopy.baseAddress, &lda,
-//             &vl, &vu, &il, &iu, &numSingularValues, <#T##s: UnsafeMutablePointer<Float>?##UnsafeMutablePointer<Float>?#>, <#T##u: UnsafeMutablePointer<Float>?##UnsafeMutablePointer<Float>?#>, <#T##ldu: UnsafePointer<__LAPACK_int>##UnsafePointer<__LAPACK_int>#>, <#T##vt: UnsafeMutablePointer<Float>?##UnsafeMutablePointer<Float>?#>, <#T##ldvt: UnsafePointer<__LAPACK_int>##UnsafePointer<__LAPACK_int>#>, <#T##work: UnsafeMutablePointer<Float>##UnsafeMutablePointer<Float>#>, <#T##lwork: UnsafePointer<__LAPACK_int>##UnsafePointer<__LAPACK_int>#>, <#T##iwork: UnsafeMutablePointer<__LAPACK_int>?##UnsafeMutablePointer<__LAPACK_int>?#>, <#T##info: UnsafeMutablePointer<__LAPACK_int>##UnsafeMutablePointer<__LAPACK_int>#>)
+    sgesvdx_(&JOBU, &JOBVT, &RANGE, &M, &N, aCopy.baseAddress, &lda,
+             &vl, &vu, &il, &iu, &numSingularValues, sigma.baseAddress,
+             u.pointee.dataRef.data.baseAddress, &ldu, vt.dataRef.data.baseAddress, &ldvt,
+             &workspaceDimension, &LWORK_QUERY, iwork, &info)
+    
+    // Allocate the memory required for the workspace using `workspaceDimension`
+    let workspace = UnsafeMutablePointer<Float>.allocate(capacity: Int(__LAPACK_int(workspaceDimension)))
+    defer {
+        workspace.deallocate()
+    }
+    
+    // Compute the SVD
+    var LWORK = __LAPACK_int(workspaceDimension)
+    sgesvdx_(&JOBU, &JOBVT, &RANGE, &M, &N, aCopy.baseAddress, &lda,
+             &vl, &vu, &il, &iu, &numSingularValues, sigma.baseAddress,
+             u.pointee.dataRef.data.baseAddress, &ldu, vt.dataRef.data.baseAddress, &ldvt,
+             workspace, &LWORK, iwork, &info)
+    
+    print("INFO: \(info)")
+    print("Num singular values found: \(numSingularValues)")
+//    let buffer = UnsafeBufferPointer(start: workspace, count: Int(workspaceDimension))
+//    print(Array(buffer))
+//    print(Array(aCopy)[0...1000])
     
     return Int(numSingularValues)
 }
