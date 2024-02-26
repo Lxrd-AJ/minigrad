@@ -1,6 +1,6 @@
 infix operator .*
 
-enum VectorShape {
+public enum VectorShape {
     case row
     case column
 }
@@ -13,7 +13,7 @@ public struct Vector<Element: Numeric> {
         return data.count
     }
 
-    init(data: [Element], shape: VectorShape = .column) {
+    public init(data: [Element], shape: VectorShape = .column) {
         self.data = data
         self.shape = shape
     }
@@ -104,7 +104,7 @@ extension Vector {
     }
 }
 
-#if canImport(Accelerate) && ACCELERATE_NEW_LAPACK
+#if canImport(Accelerate)
 extension Vector<Float> {
     /// When `Element` is a `Float` and the `Accelerate` library is available.
     /// An optimised version of a single precision vector dot product is computed using `BLAS`

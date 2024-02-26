@@ -79,4 +79,12 @@ final class tMatrix: TestCase {
         
         self.add(returnedImage, title: "recon_veles")
     }
+    
+    func testMatrixDiagonalsAccessing() throws {
+        let randLength = Int.random(in: 1 ... 10)
+        let randDiagonals = (0..<randLength).map({ _ in UInt8.random(in: 0 ... 255) })
+        let matrix = Matrix<UInt8>.diagonal(elements: randDiagonals)
+        
+        XCTAssertEqual(matrix.diagonals(), Vector(data: randDiagonals, shape: .row))
+    }
 }

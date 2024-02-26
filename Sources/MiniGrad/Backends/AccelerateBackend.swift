@@ -18,6 +18,9 @@ func blas_vectorDotProduct(left: Vector<Float>, right: Vector<Float>) -> Float {
 /// Computes the singular value decomposition of a float matrix `A` represented by `data`
 /// The references to the `u` $U$, `sigma` ($_sigma_$) matrices are populated on exit
 /// and the number of singular values found returned.
+///
+/// See https://netlib.org/lapack/explore-html/dc/d4a/group__gesvdx_ga956288282917ff9fa5cb78678d97024d.html#ga956288282917ff9fa5cb78678d97024d
+/// for more info on the `sgesvdx` function used to compute the singular value decomposition
 @available(macOS 13.3, *)
 func lapack_svd(
     u: UnsafePointer<Matrix<Float>>,
@@ -105,12 +108,6 @@ func lapack_svd(
              &vl, &vu, &il, &iu, &numSingularValues, sigma.baseAddress,
              u.pointee.dataRef.data.baseAddress, &ldu, vt.dataRef.data.baseAddress, &ldvt,
              workspace, &LWORK, iwork, &info)
-    
-    print("INFO: \(info)")
-    print("Num singular values found: \(numSingularValues)")
-//    let buffer = UnsafeBufferPointer(start: workspace, count: Int(workspaceDimension))
-//    print(Array(buffer))
-//    print(Array(aCopy)[0...1000])
     
     return Int(numSingularValues)
 }
