@@ -21,7 +21,7 @@ public extension Matrix<Float> {
     ///     * _Σ_: (nxm) singular values
     ///     * $V^T$: (mxm) right singular vectors
     func svd() -> (U: Matrix, Sigma: Matrix, Vt: Matrix) {
-        let numSingularValues = min(self.nrows, self.ncols)
+        let numSingularValues = Int(min(self.nrows, self.ncols))
         let start = UnsafeMutablePointer<Float>.allocate(capacity: numSingularValues)
         let sigmaBuffer = UnsafeMutableBufferPointer(start: start, count: numSingularValues)
         sigmaBuffer.initialize(repeating: 0 as Float)
@@ -36,7 +36,7 @@ public extension Matrix<Float> {
         // Populate the diagonals of `sigma` with values from `sigmaBuffer`
         // If no singular values were found, then `numSingularFound` would be `0` and sigma would be as is
         for idx in 0..<numSingularFound {
-            sigma[idx, idx] = sigmaBuffer[idx]
+            sigma[idx, idx] = sigmaBuffer[Int(idx)]
         }
         
         return (U, sigma, vt)

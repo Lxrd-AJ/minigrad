@@ -19,7 +19,7 @@ final class tMatrix: TestCase {
     }
 
     func testMatrixZeros() throws {
-        let randLength = Int.random(in: 1 ... 1_000)
+        let randLength = UInt.random(in: 1 ... 1_000)
         print("Verify matrix with length \(randLength)")
         let m = Matrix<Double>.zeros(nrows: randLength, ncols: randLength)
         for row in 0 ..< randLength {
@@ -30,17 +30,17 @@ final class tMatrix: TestCase {
     }
     
     func testMatrixDiagonals() throws {
-        let randLength = Int.random(in: 1 ... 10)
+        let randLength = UInt.random(in: 1 ... 10)
         let randDiagonals = (0..<randLength).map({ _ in Float.random(in: 0 ... 1) })
         let m = Matrix<Float>.diagonal(elements: randDiagonals)
         print(m)
         for idx in 0 ..< randLength {
-            XCTAssertEqual(randDiagonals[idx], m[idx, idx], accuracy: 1e-10)
+            XCTAssertEqual(randDiagonals[Int(idx)], m[idx, idx], accuracy: 1e-10)
         }
     }
     
     func testMatrixVectorSlice() throws {
-        let randLength = Int.random(in: 1 ... 10)
+        let randLength = UInt.random(in: 1 ... 10)
         let randDiagonals = (0..<randLength).map({ _ in Float.random(in: 0 ... 1) })
         let m = Matrix<Float>.diagonal(elements: randDiagonals)
         var v1 = m[0, 0 ..< randLength]
@@ -81,7 +81,7 @@ final class tMatrix: TestCase {
     }
     
     func testMatrixDiagonalsAccessing() throws {
-        let randLength = Int.random(in: 1 ... 10)
+        let randLength = UInt.random(in: 1 ... 10)
         let randDiagonals = (0..<randLength).map({ _ in UInt8.random(in: 0 ... 255) })
         let matrix = Matrix<UInt8>.diagonal(elements: randDiagonals)
         

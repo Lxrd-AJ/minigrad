@@ -26,17 +26,11 @@ final class tSVD: TestCase {
         print("Vt: \(svd.Vt.shape)")
         
         
-        // TODO: Reconstruct the original input matrix and verify that they are equal to a very small margin of error
+        // Reconstruct the original input matrix
         let T = svd.U * svd.Sigma * svd.Vt
         print(T.shape)
         
-        // TODO: The doc says `U` computed by LAPACK contains the left singular vectors stored columnwise
-        // I need to check if that is the case and implement some kind of transpose operation
-        // TODO: Same for Vt, VT contains the rows of V**T (the right singular
-        // vectors, stored rowwise)
-        
-//        let reconImage2D = image2D.toCGImage()!
-//        self.add(reconImage2D, title: "Recon", lifetime: .keepAlways)
+        // TODO: and verify that they are equal to a very small margin of error
     }
 
 }

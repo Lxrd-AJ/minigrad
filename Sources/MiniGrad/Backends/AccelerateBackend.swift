@@ -26,9 +26,9 @@ func lapack_svd(
     u: UnsafePointer<Matrix<Float>>,
     sigma: UnsafeMutableBufferPointer<Float>,
     vt: inout Matrix<Float>,
-    numRows: Int, numCols: Int,
+    numRows: UInt, numCols: UInt,
     data: UnsafeMutableBufferPointer<Float>
-) -> Int {
+) -> UInt {
     var JOBU = Int8("V".utf8.first!) // Flag to compute all left singular vectors, see `RANGE`
     var JOBVT = Int8("V".utf8.first!) // Flag to compute all right singular vectors, see `RANGE`
     var RANGE = Int8("A".utf8.first!) // Flag to compute all singular values
@@ -80,7 +80,7 @@ func lapack_svd(
         aCopy.deallocate()
     }
     // Create `iwork`, kind of like a page in a notebook for LAPACK to perform its calculations
-    let iwork = UnsafeMutablePointer<__LAPACK_int>.allocate(capacity: 12 * min(numRows, numCols))
+    let iwork = UnsafeMutablePointer<__LAPACK_int>.allocate(capacity: 12 * Int(min(numRows, numCols)))
     defer {
         iwork.deallocate()
     }
@@ -109,5 +109,5 @@ func lapack_svd(
              u.pointee.dataRef.data.baseAddress, &ldu, vt.dataRef.data.baseAddress, &ldvt,
              workspace, &LWORK, iwork, &info)
     
-    return Int(numSingularValues)
+    return UInt(numSingularValues)
 }

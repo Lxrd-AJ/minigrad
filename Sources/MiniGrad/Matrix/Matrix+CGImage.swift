@@ -24,10 +24,10 @@ public extension Matrix<Float> {
     // This works for any 32 bit data type such as Float, Int, Double etc
     // but its best to constrain it as Float only so that the underlying data is meaningful
     static func from32Bits(cgImage: CGImage) -> Matrix<Element>? {
-        let m = Matrix<Element>.zeros(nrows: cgImage.height, ncols: cgImage.width)
+        let m = Matrix<Element>.zeros(nrows: UInt(cgImage.height), ncols: UInt(cgImage.width))
         var tmpBuffer = vImage_Buffer(
             data: m.dataRef.data.baseAddress, height: vImagePixelCount(m.nrows), width: vImagePixelCount(m.ncols),
-            rowBytes: m.ncols * MemoryLayout<Element>.stride
+            rowBytes: Int(m.ncols) * MemoryLayout<Element>.stride
         )
         let error = vImageBuffer_InitWithCGImage(&tmpBuffer, &imageFormat, [0, 0, 0, 0], cgImage, vImage_Flags(kvImageNoAllocate))
         if error == kvImageNoError {
@@ -42,7 +42,7 @@ public extension Matrix<Float> {
         let tmpBuffer = vImage_Buffer(
             data: self.dataRef.data.baseAddress, height: vImagePixelCount(self.nrows),
             width: vImagePixelCount(self.ncols),
-            rowBytes: self.ncols * MemoryLayout<Element>.stride
+            rowBytes: Int(self.ncols) * MemoryLayout<Element>.stride
         )
         
         return try? tmpBuffer.createCGImage(format: imageFormat)
@@ -52,23 +52,23 @@ public extension Matrix<Float> {
 // See also https://github.com/hollance/CoreMLHelpers/blob/master/CoreMLHelpers/CGImage%2BRawBytes.swift
 public extension Matrix {
     static func from(cgImage: CGImage) -> Matrix? {
-        let m = Matrix.zeros(nrows: cgImage.height, ncols: cgImage.width)
+        let m = Matrix.zeros(nrows: UInt(cgImage.height), ncols: UInt(cgImage.width))
         let stride = MemoryLayout<Element>.stride
         
         guard let context = CGContext(
-                    data: m.dataRef.data.baseAddress, width: m.ncols, height: m.nrows,
-                    bitsPerComponent: 8, bytesPerRow: m.ncols * stride, space: CGColorSpaceCreateDeviceGray(),
+            data: m.dataRef.data.baseAddress, width: cgImage.width, height: cgImage.height,
+            bitsPerComponent: 8, bytesPerRow: Int(m.ncols) * stride, space: CGColorSpaceCreateDeviceGray(),
                     bitmapInfo: CGImageAlphaInfo.none.rawValue) else {
             return nil
         }
         
-        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: m.ncols, height: m.nrows))
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: Int(m.ncols), height: Int(m.nrows)))
         return m
     }
     
     func toCGImage() -> CGImage? {
         let stride = MemoryLayout<Element>.stride
-        guard let context = CGContext(data: self.dataRef.data.baseAddress, width: self.ncols, height: self.nrows, bitsPerComponent: 8, bytesPerRow: self.ncols * stride, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue) else {
+        guard let context = CGContext(data: self.dataRef.data.baseAddress, width: Int(self.ncols), height: Int(self.nrows), bitsPerComponent: 8, bytesPerRow: Int(self.ncols) * stride, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue) else {
             return nil
         }
         

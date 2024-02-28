@@ -14,7 +14,7 @@ extension Matrix<Float> {
     @available(macOS 13.3, *)
     public static func * (lhs: Matrix, rhs: Matrix) -> Matrix {
         // Either use `vdsp_mmul` https://developer.apple.com/documentation/accelerate/1449984-vdsp_mmul
-        // or BLAS `sgemm`
+        // or BLAS `sgemm` https://netlib.org/lapack/explore-html/dd/d09/group__gemm_ga8cad871c590600454d22564eff4fed6b.html#ga8cad871c590600454d22564eff4fed6b
         assert(lhs.ncols == rhs.nrows, "Left columns must match right rows")
         let result = Matrix.zeros(nrows: lhs.nrows, ncols: rhs.ncols)
         
