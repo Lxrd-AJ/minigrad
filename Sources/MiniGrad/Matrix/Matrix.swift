@@ -37,6 +37,30 @@ public struct Matrix<Element: Numeric> {
         self.dataRef = data as MatrixDataReference<Element>
     }
     
+    public init(data: [[Element]]) {
+        assert(data.count > 0, "There has to be more than 1 element in the data")
+        self.nrows = UInt(data.count)
+        self.ncols = UInt(data.first!.count)
+        for (idx, elem) in data.enumerated() {
+            assert(elem.count == self.ncols, "Column \(idx) expected to have length \(self.ncols)")
+        }
+        
+        let count = nrows * ncols
+        let start = UnsafeMutablePointer<Element>.allocate(capacity: Int(count))
+        let buffer = UnsafeMutableBufferPointer(start: start, count: Int(count))
+        self.dataRef = MatrixDataReference(data: buffer)
+        
+        for row in 0..<self.nrows {
+            let strideStart = Int(row) * Int(self.ncols)
+            let strideEnd = strideStart + Int(self.ncols)
+            
+            var rowData = data[Int(row)]
+            rowData.withUnsafeMutableBufferPointer({ rowDataBufferPtr in
+                buffer[strideStart ..< strideEnd] = rowDataBufferPtr[0 ..< Int(self.ncols)]
+            })
+        }
+    }
+    
     public static func zeros(nrows: UInt, ncols: UInt) -> Matrix<Element> {
         assert((nrows != 0) || (ncols != 0), "Cannot create matrix with zero rows or columns")
         let count = nrows * ncols

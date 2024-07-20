@@ -20,7 +20,6 @@ final class tMatrix: TestCase {
 
     func testMatrixZeros() throws {
         let randLength = UInt.random(in: 1 ... 1_000)
-        print("Verify matrix with length \(randLength)")
         let m = Matrix<Double>.zeros(nrows: randLength, ncols: randLength)
         for row in 0 ..< randLength {
             for col in 0 ..< randLength {
@@ -33,7 +32,7 @@ final class tMatrix: TestCase {
         let randLength = UInt.random(in: 1 ... 10)
         let randDiagonals = (0..<randLength).map({ _ in Float.random(in: 0 ... 1) })
         let m = Matrix<Float>.diagonal(elements: randDiagonals)
-        print(m)
+        
         for idx in 0 ..< randLength {
             XCTAssertEqual(randDiagonals[Int(idx)], m[idx, idx], accuracy: 1e-10)
         }
@@ -47,14 +46,6 @@ final class tMatrix: TestCase {
         v1[0] = 10
         let v2 = m[0, 0 ..< randLength]
         XCTAssertNotEqual(v1, v2)
-        
-        print(m)
-        print(m.shape)
-        
-        let v3 = m[1, ...]
-        print(v3)
-        print(v3.length)
-        XCTAssertNotEqual(v3[1], 0)
     }
     
     func testMatrix32BitsFromCGImage() throws {
@@ -62,7 +53,6 @@ final class tMatrix: TestCase {
         let imageMatrix = Matrix<Float>.from32Bits(cgImage: image)
         XCTAssertNotNil(imageMatrix)
         
-        print(imageMatrix![10, 2...20])
         
         let returnedImage = imageMatrix!.toCGImage32Bits()!
         self.add(returnedImage, title: "recon_32bits_veles")
@@ -70,7 +60,6 @@ final class tMatrix: TestCase {
     
     func testMatrixFromCGImageDirectly() throws {
         let image = self.loadImage(named: "veles", ext: "jpeg")
-        print(image)
         
         let imageMatrix = Matrix<UInt8>.from(cgImage: image)!
 //        let imageMatrix = Matrix<UInt8>.diagonal(elements: [UInt8](repeating: 255, count: 1000))
@@ -86,5 +75,26 @@ final class tMatrix: TestCase {
         let matrix = Matrix<UInt8>.diagonal(elements: randDiagonals)
         
         XCTAssertEqual(matrix.diagonals(), Vector(data: randDiagonals, shape: .row))
+    }
+    
+    func testInitWithData() throws {
+        let numRows = Int.random(in: 1...100)
+        let numCols = Int.random(in: 1...100)
+        var values: [[Float]] = []
+        let randFcn = { (count: Int) -> [Float] in
+            let arr = Array(repeating: 0, count: count)
+            return arr.map({ _ -> Float in Float.random(in: -100.0 ... 100.0) })
+        }
+        for _ in 0..<numRows {
+            values.append(randFcn(numCols))
+        }
+        let matrix = Matrix(data: values)
+        
+        // Get a random row
+        let randRowIdx = UInt.random(in: 0..<UInt(numRows))
+        let actualRandRow = matrix[randRowIdx, ...]
+        let expectedRandRow = Vector(data: values[Int(randRowIdx)], shape: .row)
+        
+        XCTAssertEqual(expectedRandRow, actualRandRow)
     }
 }

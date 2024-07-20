@@ -1,11 +1,3 @@
-//
-//  File.swift
-//   - ,  
-//
-//  Created by AJ Ibraheem on 23/02/2024.
-//  Copyright 2024, Ara Intelligence Limited.
-   
-
 import Foundation
 
 @available(macOS 11.0, *)

@@ -1,11 +1,3 @@
-//
-//  File.swift
-//   - ,  
-//
-//  Created by AJ Ibraheem on 26/02/2024.
-//  Copyright 2024, Ara Intelligence Limited.
-   
-
 import Foundation
 import Accelerate
 
