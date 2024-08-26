@@ -23,12 +23,12 @@ func blas_vectorDotProduct(left: Vector<Float>, right: Vector<Float>) -> Float {
 /// for more info on the `sgesvdx` function used to compute the singular value decomposition
 @available(macOS 13.3, *)
 func lapack_svd(
-    u: UnsafePointer<Matrix<Float>>,
-    sigma: UnsafeMutableBufferPointer<Float>,
-    vt: inout Matrix<Float>,
-    numRows: UInt, numCols: UInt,
-    data: UnsafeMutableBufferPointer<Float>
-) -> UInt {
+    u: MatrixBuffer<Float>,
+    sigma:  UnsafeMutableBufferPointer<Float>,
+    vt:  MatrixBuffer<Float>,
+    numRows: Int, numCols: Int,
+    data: MatrixBuffer<Float>
+) -> Int {
     var JOBU = Int8("V".utf8.first!) // Flag to compute all left singular vectors, see `RANGE`
     var JOBVT = Int8("V".utf8.first!) // Flag to compute all right singular vectors, see `RANGE`
     var RANGE = Int8("A".utf8.first!) // Flag to compute all singular values
@@ -74,8 +74,8 @@ func lapack_svd(
     var workspaceDimension = Float()
     // Create a copy of the `A` matrix, per the documentation, `sgesvdx` destroys the contents of the
     // `A` matrix on exit.
-    let aCopy = UnsafeMutableBufferPointer<Float>.allocate(capacity: data.count)
-    _ = aCopy.initialize(from: data)
+    let aCopy = UnsafeMutableBufferPointer<Float>.allocate(capacity: data.numElements)
+    _ = aCopy.initialize(from: data.mutableBufferPointer())
     defer {
         aCopy.deallocate()
     }
@@ -93,7 +93,7 @@ func lapack_svd(
     // Compute the dimension of the workspace needed for LAPACK
     sgesvdx_(&JOBU, &JOBVT, &RANGE, &M, &N, aCopy.baseAddress, &lda,
              &vl, &vu, &il, &iu, &numSingularValues, sigma.baseAddress,
-             u.pointee.dataRef.data.baseAddress, &ldu, vt.dataRef.data.baseAddress, &ldvt,
+             u.mutablePointer(), &ldu, vt.mutablePointer(), &ldvt,
              &workspaceDimension, &LWORK_QUERY, iwork, &info)
     
     // Allocate the memory required for the workspace using `workspaceDimension`
@@ -106,8 +106,8 @@ func lapack_svd(
     var LWORK = __LAPACK_int(workspaceDimension)
     sgesvdx_(&JOBU, &JOBVT, &RANGE, &M, &N, aCopy.baseAddress, &lda,
              &vl, &vu, &il, &iu, &numSingularValues, sigma.baseAddress,
-             u.pointee.dataRef.data.baseAddress, &ldu, vt.dataRef.data.baseAddress, &ldvt,
+             u.mutablePointer(), &ldu, vt.mutablePointer(), &ldvt,
              workspace, &LWORK, iwork, &info)
     
-    return UInt(numSingularValues)
+    return Int(numSingularValues)
 }

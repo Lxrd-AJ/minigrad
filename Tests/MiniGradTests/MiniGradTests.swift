@@ -1,32 +1,17 @@
-import XCTest
-import Foundation
-@testable import MiniGrad
+//
+//  MiniGradTests.swift
+//
+//  Created by AJ Ibraheem on 12/02/2024.
 
-final class MiniGradTests: XCTestCase {
-    func testExample() throws {
-        // XCTest Documentation
-        // https://developer.apple.com/documentation/xctest
+import Testing
 
-        // Defining Test Cases and Test Methods
-        // https://developer.apple.com/documentation/xctest/defining_test_cases_and_test_methods
+extension Tag {
+    enum DataTypeTest {
+        @Tag static var float: Tag
     }
 }
 
-extension XCTestCase {
-    func verifyEqual(_ left: Vector<Float>, _ right: Vector<Float>, tolerance: Float = Float.ulpOfOne, _ message: String = "") {
-        XCTAssertEqual(left.data.count, right.data.count)
-        let items = zip(left.data, right.data)
-        for item in items {
-            XCTAssertEqual(item.0, item.1, accuracy: tolerance, message)
-        }
-    }
-    
-    func verifyNotEqual(_ left: Vector<Float>, _ right: Vector<Float>, tolerance: Float = Float.ulpOfOne, _ message: String = "") {
-        XCTAssertEqual(left.data.count, right.data.count)
-        let items = zip(left.data, right.data)
-        for item in items {
-            XCTAssertNotEqual(item.0, item.1, accuracy: tolerance, message)
-        }
-    }
-}
+
+
+
 

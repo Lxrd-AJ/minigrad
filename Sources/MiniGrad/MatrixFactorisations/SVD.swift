@@ -6,9 +6,6 @@
    
 
 import Foundation
-#if canImport(Accelerate)
-import Accelerate
-#endif
 
 @available(macOS 13.3, *)
 public extension Matrix<Float> {
@@ -25,17 +22,17 @@ public extension Matrix<Float> {
         let sigmaBuffer = UnsafeMutableBufferPointer(start: start, count: numSingularValues)
         sigmaBuffer.initialize(repeating: 0 as Float)
         
-        var U = Matrix.zeros(nrows: self.nrows, ncols: self.nrows)
-        var sigma = Matrix.zeros(nrows: self.nrows, ncols: self.ncols)
-        var vt = Matrix.zeros(nrows: self.ncols, ncols: self.ncols)
+        let U = Matrix.zeros(nrows: self.nrows, ncols: self.nrows)
+        let vt = Matrix.zeros(nrows: self.ncols, ncols: self.ncols)
         
         #if canImport(Accelerate)
-        let numSingularFound = lapack_svd(u: &U, sigma: sigmaBuffer, vt: &vt, numRows: self.nrows, numCols: self.ncols, data: self.dataRef.data)
+        let numSingularFound = lapack_svd(u: U.buffer, sigma: sigmaBuffer, vt: vt.buffer, numRows: self.nrows, numCols: self.ncols, data: self.buffer)
         
+        let sigma = Matrix.zeros(nrows: self.nrows, ncols: self.ncols)
         // Populate the diagonals of `sigma` with values from `sigmaBuffer`
         // If no singular values were found, then `numSingularFound` would be `0` and sigma would be as is
         for idx in 0..<numSingularFound {
-            sigma[idx, idx] = sigmaBuffer[Int(idx)]
+            sigma[idx, idx] = sigmaBuffer[idx]
         }
         
         return (U, sigma, vt)

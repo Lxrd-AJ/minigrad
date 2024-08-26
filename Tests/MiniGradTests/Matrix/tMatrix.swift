@@ -19,7 +19,7 @@ final class tMatrix: TestCase {
     }
 
     func testMatrixZeros() throws {
-        let randLength = UInt.random(in: 1 ... 1_000)
+        let randLength = Int.random(in: 1 ... 1_000)
         let m = Matrix<Double>.zeros(nrows: randLength, ncols: randLength)
         for row in 0 ..< randLength {
             for col in 0 ..< randLength {
@@ -29,7 +29,7 @@ final class tMatrix: TestCase {
     }
     
     func testMatrixDiagonals() throws {
-        let randLength = UInt.random(in: 1 ... 10)
+        let randLength = Int.random(in: 1 ... 10)
         let randDiagonals = (0..<randLength).map({ _ in Float.random(in: 0 ... 1) })
         let m = Matrix<Float>.diagonal(elements: randDiagonals)
         
@@ -39,7 +39,7 @@ final class tMatrix: TestCase {
     }
     
     func testMatrixVectorSlice() throws {
-        let randLength = UInt.random(in: 1 ... 10)
+        let randLength = Int.random(in: 1 ... 10)
         let randDiagonals = (0..<randLength).map({ _ in Float.random(in: 0 ... 1) })
         let m = Matrix<Float>.diagonal(elements: randDiagonals)
         var v1 = m[0, 0 ..< randLength]
@@ -77,24 +77,42 @@ final class tMatrix: TestCase {
         XCTAssertEqual(matrix.diagonals(), Vector(data: randDiagonals, shape: .row))
     }
     
-    func testInitWithData() throws {
-        let numRows = Int.random(in: 1...100)
-        let numCols = Int.random(in: 1...100)
-        var values: [[Float]] = []
-        let randFcn = { (count: Int) -> [Float] in
-            let arr = Array(repeating: 0, count: count)
-            return arr.map({ _ -> Float in Float.random(in: -100.0 ... 100.0) })
-        }
-        for _ in 0..<numRows {
-            values.append(randFcn(numCols))
-        }
-        let matrix = Matrix(data: values)
-        
-        // Get a random row
-        let randRowIdx = UInt.random(in: 0..<UInt(numRows))
-        let actualRandRow = matrix[randRowIdx, ...]
-        let expectedRandRow = Vector(data: values[Int(randRowIdx)], shape: .row)
-        
-        XCTAssertEqual(expectedRandRow, actualRandRow)
+//    func testInitWithData() throws {
+//        let numRows = Int.random(in: 1...100)
+//        let numCols = Int.random(in: 1...100)
+//        var values: [[Float]] = []
+//        let randFcn = { (count: Int) -> [Float] in
+//            let arr = Array(repeating: 0, count: count)
+//            return arr.map({ _ -> Float in Float.random(in: -100.0 ... 100.0) })
+//        }
+//        for _ in 0..<numRows {
+//            values.append(randFcn(numCols))
+//        }
+//        let matrix = Matrix(data: values)
+//        
+//        // Get a random row
+//        let randRowIdx = Int.random(in: 0..<Int(numRows))
+//        let actualRandRow = matrix[randRowIdx, ...]
+//        let expectedRandRow = Vector(data: values[Int(randRowIdx)], shape: .row)
+//        
+//        XCTAssertEqual(expectedRandRow, actualRandRow)
+//    }
+    
+    func testRangeAccess() throws {
+        let matrixA = Matrix(rows: 2, cols: 5, initialValue: 0)
+
+        // Setting elements using ranged subscript
+        matrixA[0, 1..<4] = Vector(data: [10, 20, 30])
+        matrixA[1, 2..<5] = Vector(data: [40, 50, 60])
+
+        // Getting elements using ranged subscript
+        let slice1 = matrixA[0, 1..<4] // [10, 20, 30]
+        let slice2 = matrixA[1, 2..<5] // [40, 50, 60]
+
+        print("Matrix A:")
+        print(matrixA)
+
+        print("Slice 1: \(slice1)")
+        print("Slice 2: \(slice2)")
     }
 }

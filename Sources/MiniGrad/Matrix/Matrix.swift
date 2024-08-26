@@ -1,137 +1,134 @@
-/// An object that wraps the underlying data held by a matrix
-/// It handles the allocation & de-allocation of the underying memory buffer
-class MatrixDataReference <Element: Numeric> {
-    var data: UnsafeMutableBufferPointer<Element>
-    
-    init(data: UnsafeMutableBufferPointer<Element>) {
-        self.data = data
-    }
-    
-    deinit {
-        self.data.deallocate()
-    }
-}
+//
+//  Matrix.swift
+//
+//  Copyright 2024.
 
-
-public struct Matrix<Element: Numeric> {
+public class Matrix<Element: Numeric> {
     /// The number of rows in the matrix
-    public let nrows: UInt
+    public var nrows: Int {
+        return self.buffer.header.rows
+    }
 
     /// The number of columns in the matrix
-    public let ncols: UInt
+    public var ncols: Int {
+        return self.buffer.header.cols
+    }
     
-    public var shape: (nrows: UInt, ncols: UInt) {
+    public var shape: (nrows: Int, ncols: Int) {
         return (nrows, ncols)
     }
     
     /// The minimum dimension defined as `min(nrows, ncols)` for use with BLAS  & LAPACK Interop
-    var minDimension: UInt {
+    var minDimension: Int {
         return min(nrows, ncols)
     }
 
-    internal var dataRef: MatrixDataReference<Element>
+    internal var buffer: MatrixBuffer<Element>
     
-    init(nrows: UInt, ncols: UInt, data: MatrixDataReference<Element>) {
-        self.nrows = nrows
-        self.ncols = ncols
-        self.dataRef = data as MatrixDataReference<Element>
+    private func ensureUniqueBuffer() {
+        if !isKnownUniquelyReferenced(&self.buffer) {
+            self.buffer = self.buffer.clone()
+        }
+    }
+    
+    public init(rows: Int, cols: Int, initialValue: Element) {
+        self.buffer = MatrixBuffer.create(size: (rows, cols), initial: initialValue)
     }
     
     public init(data: [[Element]]) {
-        assert(data.count > 0, "There has to be more than 1 element in the data")
-        self.nrows = UInt(data.count)
-        self.ncols = UInt(data.first!.count)
+        precondition(data.count > 0, "There has to be more than 1 element in the data")
+        let nrows = data.count
+        let ncols = data.first!.count
         for (idx, elem) in data.enumerated() {
-            assert(elem.count == self.ncols, "Column \(idx) expected to have length \(self.ncols)")
+            assert(elem.count == ncols, "Column \(idx) expected to have length \(ncols)")
         }
-        
-        let count = nrows * ncols
-        let start = UnsafeMutablePointer<Element>.allocate(capacity: Int(count))
-        let buffer = UnsafeMutableBufferPointer(start: start, count: Int(count))
-        self.dataRef = MatrixDataReference(data: buffer)
+
+        self.buffer = MatrixBuffer.create(size: (nrows, ncols), initial: 0 as Element)
+        let mutableBufferPtr = self.buffer.mutableBufferPointer()
         
         for row in 0..<self.nrows {
-            let strideStart = Int(row) * Int(self.ncols)
-            let strideEnd = strideStart + Int(self.ncols)
+            let strideStart = row * self.ncols
+            let strideEnd = strideStart + self.ncols
             
-            var rowData = data[Int(row)]
+            var rowData = data[row]
             rowData.withUnsafeMutableBufferPointer({ rowDataBufferPtr in
-                buffer[strideStart ..< strideEnd] = rowDataBufferPtr[0 ..< Int(self.ncols)]
+                mutableBufferPtr[strideStart ..< strideEnd] = rowDataBufferPtr[0 ..< self.ncols]
             })
         }
     }
     
-    public static func zeros(nrows: UInt, ncols: UInt) -> Matrix<Element> {
-        assert((nrows != 0) || (ncols != 0), "Cannot create matrix with zero rows or columns")
-        let count = nrows * ncols
-        let start = UnsafeMutablePointer<Element>.allocate(capacity: Int(count))
-        let buffer = UnsafeMutableBufferPointer(start: start, count: Int(count))
-        buffer.initialize(repeating: 0 as Element)
-        
-        let dataRef = MatrixDataReference(data: buffer)
-        return Matrix(nrows: nrows, ncols: ncols, data: dataRef)
-    }
-    
-    public static func diagonal(elements: [Element]) -> Matrix<Element> {
-        let n = UInt(elements.count)
-        var mat = Matrix.zeros(nrows: UInt(n), ncols: UInt(n))
-        
-        for idx in 0 ..< n {
-            mat[idx, idx] = elements[Int(idx)]
-        }
-        
-        return mat
+    init(existingBuffer: MatrixBuffer<Element>) {
+        self.buffer = existingBuffer
     }
 }
 
 /// Subscript access
 public extension Matrix {
-    private func indexIsValid(row: UInt, column: UInt) -> Bool {
+    private func indexIsValid(row: Int, column: Int) -> Bool {
         return (row >= 0 && row < nrows) && (column >= 0 && column < ncols)
     }
     
     /// return the element at the specified row & column
-    subscript(row: UInt, column: UInt) -> Element {
+    /// row & column subscript access starts from 0 to `self.nrows-1`
+    subscript(row: Int, column: Int) -> Element {
         get {
-            assert(indexIsValid(row: row, column: column), "Index out of range")
+            precondition(indexIsValid(row: row, column: column), "Index out of range")
             let stride = row * self.ncols
-            return self.dataRef.data[Int(stride + column)]
+            return self.buffer[stride + column] 
         }
         set {
-            assert(indexIsValid(row: row, column: column), "Index out of range")
+            precondition(indexIsValid(row: row, column: column), "Index out of range")
+            self.ensureUniqueBuffer()
             let stride = row * self.ncols
-            return self.dataRef.data[Int(stride + column)] = newValue
+            self.buffer[stride + column] = newValue
         }
     }
     
-    subscript(row: UInt, column: Range<UInt>) -> Vector<Element> {
-        assert(indexIsValid(row: row, column: column.lowerBound), "Index out of range")
-        assert(indexIsValid(row: row, column: column.upperBound - 1), "Index out of range")
-        let stride = row * self.ncols
-        let data = self.dataRef.data[Int(stride + column.lowerBound) ..< Int(stride + column.upperBound)]
-        // Copy of the data for now
-        let copyOfData: [Element] = Array(data)
-        return Vector(data: copyOfData, shape: .row)
+    subscript(row: Int, columnRange: Range<Int>) -> Vector<Element> {
+        get {
+            precondition(indexIsValid(row: row, column: columnRange.lowerBound), "Index out of range")
+            precondition(indexIsValid(row: row, column: columnRange.upperBound - 1), "Index out of range")
+            
+            let stride = (row * self.ncols) + columnRange.lowerBound
+            return self.buffer.withUnsafeMutablePointerToElements({ pointer in
+                let data: [Element] = (0..<columnRange.count).map({ i in pointer[stride + i] })
+                return Vector(data: data, shape: .row)
+            })
+        }
+        
+        set {
+            precondition(indexIsValid(row: row, column: columnRange.lowerBound) && indexIsValid(row: row, column: columnRange.upperBound - 1), "Index out of range")
+            precondition(newValue.length == columnRange.count, "Mismatched element count")
+            
+            ensureUniqueBuffer()
+            
+            buffer.withUnsafeMutablePointerToElements { pointer in
+                let stride = (row * self.ncols) + columnRange.lowerBound
+                for i in 0..<columnRange.count {
+                    pointer[stride + i] = newValue[i]
+                }
+            }
+        }
     }
     
-    subscript(row: UInt, column: ClosedRange<UInt>) -> Vector<Element> {
-        assert(indexIsValid(row: row, column: column.lowerBound), "Index out of range")
-        assert(indexIsValid(row: row, column: column.upperBound), "Index out of range")
-        let stride = row * self.ncols
-        let data = self.dataRef.data[Int(stride + column.lowerBound) ... Int(stride + column.upperBound)]
-        // Copy of the data for now
-        let copyOfData: [Element] = Array(data)
-        return Vector(data: copyOfData, shape: .row)
-    }
-    
-    subscript(row: UInt, column: UnboundedRange) -> Vector<Element> {
-        assert((row >= 0 && row < nrows), "Index out of range")
-        let stride = row * self.ncols
-        let data = self.dataRef.data[Int(stride) ... Int(stride + self.ncols - 1)]
-        // Copy of the data for now
-        let copyOfData: [Element] = Array(data)
-        return Vector(data: copyOfData, shape: .row)
-    }
+//    subscript(row: UInt, column: ClosedRange<UInt>) -> Vector<Element> {
+//        assert(indexIsValid(row: row, column: column.lowerBound), "Index out of range")
+//        assert(indexIsValid(row: row, column: column.upperBound), "Index out of range")
+//        let stride = row * self.ncols
+//        let data = self.dataRef.data[Int(stride + column.lowerBound) ... Int(stride + column.upperBound)]
+//        // Copy of the data for now
+//        let copyOfData: [Element] = Array(data)
+//        return Vector(data: copyOfData, shape: .row)
+//    }
+//    
+//    subscript(row: UInt, column: UnboundedRange) -> Vector<Element> {
+//        assert((row >= 0 && row < nrows), "Index out of range")
+//        let stride = row * self.ncols
+//        let data = self.dataRef.data[Int(stride) ... Int(stride + self.ncols - 1)]
+//        // Copy of the data for now
+//        let copyOfData: [Element] = Array(data)
+//        return Vector(data: copyOfData, shape: .row)
+//    }
 }
 
 public extension Matrix {

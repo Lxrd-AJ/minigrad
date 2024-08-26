@@ -6,12 +6,13 @@
 //  Copyright 2024, Ara Intelligence Limited.
    
 
-import XCTest
+import Testing
 import MiniGrad
 
-@available(macOS 13.3, *)
-final class tSVD: TestCase {
+struct SVDTests: TestCaseWithResources, TestWithBatteries {
 
+    @available(macOS 13.3, *)
+    @Test
     func testSVDOnAnImage() throws {
         let image = self.loadImage(named: "veles", ext: "jpeg")
         let image2D = Matrix<UInt8>.from(cgImage: image)!
@@ -27,10 +28,13 @@ final class tSVD: TestCase {
         
         
         // Reconstruct the original input matrix
-        let T = svd.U * svd.Sigma * svd.Vt
+        let T1 = svd.U * svd.Sigma
+        let T2 = T1 * svd.Vt
+        let T = T2
         print(T.shape)
         
-        // TODO: and verify that they are equal to a very small margin of error
+        // TODO: Continue
+//        verifyEqual(lhs: floatImage, rhs: T)
     }
 
 }

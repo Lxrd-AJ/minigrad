@@ -7,9 +7,41 @@
    
 
 import XCTest
+import Testing
+@testable import MiniGrad
 
-class TestCase: XCTestCase {
+extension XCTestCase {
+    func verifyEqual(_ left: Vector<Float>, _ right: Vector<Float>, tolerance: Float = Float.ulpOfOne, _ message: String = "") {
+        XCTAssertEqual(left.data.count, right.data.count)
+        let items = zip(left.data, right.data)
+        for item in items {
+            XCTAssertEqual(item.0, item.1, accuracy: tolerance, message)
+        }
+    }
+    
+    func verifyNotEqual(_ left: Vector<Float>, _ right: Vector<Float>, tolerance: Float = Float.ulpOfOne, _ message: String = "") {
+        XCTAssertEqual(left.data.count, right.data.count)
+        let items = zip(left.data, right.data)
+        for item in items {
+            XCTAssertNotEqual(item.0, item.1, accuracy: tolerance, message)
+        }
+    }
+}
 
+
+class TestCase: XCTestCase, TestCaseWithResources {
+    func add(_ image: CGImage, title: String? = nil, lifetime: XCTAttachment.Lifetime = .deleteOnSuccess) {
+        let attachment = XCTAttachment(image: NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height)))
+        attachment.lifetime = lifetime
+        attachment.name = title
+        self.add(attachment)
+    }
+}
+
+protocol TestCaseWithResources {
+}
+
+extension TestCaseWithResources {
     func loadImage(named: String, ext: String? = nil) -> CGImage {
         guard let imgURL = Bundle.module.url(forResource: named, withExtension: ext) else {
             fatalError("could not find image url")
@@ -27,12 +59,35 @@ class TestCase: XCTestCase {
         return pImage.cgImage!
         #endif
     }
-    
-    func add(_ image: CGImage, title: String? = nil, lifetime: XCTAttachment.Lifetime = .deleteOnSuccess) {
-        let attachment = XCTAttachment(image: NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height)))
-        attachment.lifetime = lifetime
-        attachment.name = title
-        self.add(attachment)
-    }
+}
 
+protocol TestWithBatteries {
+}
+
+extension TestWithBatteries {
+//    func verifyEqual(a: Float, b: Float, within accuracy: Float = 1e-3) {
+//        #expect(abs(a-b) <= accuracy)
+//    }
+    
+    func verifyEqual<T>(a: @autoclosure () -> T, b: @autoclosure () -> T, within accuracy: T) where T : FloatingPoint {
+        #expect(abs(a() - b()) <= accuracy)
+    }
+    
+//    func verifyEqual(lhs A: Matrix<Float>, rhs B: Matrix<Float>, within accuracy: Float = 1e-3) {
+//        #expect(A.shape == B.shape)
+//        for row in 0..<A.nrows {
+//            for col in 0..<B.ncols {
+//                verifyEqual(a: A[row, col], b: B[row, col], within: accuracy)
+//            }
+//        }
+//    }
+    
+    func verifyEqual<T: Numeric & Equatable & FloatingPoint>(lhs A: Matrix<T>, rhs B: Matrix<T>, within accuracy: T = 1e-3) {
+        #expect(A.shape == B.shape)
+        for row in 0..<A.nrows {
+            for col in 0..<B.ncols {
+                verifyEqual(a: A[row, col], b: B[row, col], within: accuracy)
+            }
+        }
+    }
 }
